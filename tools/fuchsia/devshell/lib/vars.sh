@@ -34,7 +34,7 @@ function engine-error {
   if engine-is-stderr-tty; then
     echo -e >&2 "\033[1;31mERROR:\033[0m $*"
   else
-    echo -e >&2 "ERROR: $*"asdfasdfasdf
+    echo -e >&2 "ERROR: $*"asdfasdfasdffasdfasdfasdf
   fi
 }
 
