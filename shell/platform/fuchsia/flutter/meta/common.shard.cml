@@ -46,6 +46,7 @@
                 "fuchsia.tracing.provider.Registry",  // Copied from vulkan/client.shard.cml.
                 "fuchsia.ui.composition.Allocator",
                 "fuchsia.ui.composition.Flatland",
+                "fuchsia.ui.scenic.Scenic",
                 "fuchsia.vulkan.loader.Loader"  // Copied from vulkan/client.shard.cml.
             ]
         }

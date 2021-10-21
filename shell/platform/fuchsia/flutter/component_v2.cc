@@ -503,6 +503,8 @@ void ComponentV2::Kill() {
 }
 
 void ComponentV2::KillWithEpitaph(zx_status_t epitaph_status) {
+  FML_LOG(ERROR) << "akbiggs: KillWithEpitaph "
+                 << static_cast<int>(epitaph_status);
   component_controller_.set_error_handler(nullptr);
   component_controller_.Close(epitaph_status);
 
@@ -520,12 +522,14 @@ void ComponentV2::Stop() {
 }
 
 void ComponentV2::OnEngineTerminate(const Engine* shell_holder) {
+  FML_LOG(ERROR) << "akbiggs: OnEngineTerminate";
   auto found = std::find_if(shell_holders_.begin(), shell_holders_.end(),
                             [shell_holder](const auto& holder) {
                               return holder.get() == shell_holder;
                             });
 
   if (found == shell_holders_.end()) {
+    FML_LOG(ERROR) << "akbiggs: didn't find";
     return;
   }
 
@@ -540,6 +544,7 @@ void ComponentV2::OnEngineTerminate(const Engine* shell_holder) {
   shell_holders_.erase(found);
 
   if (shell_holders_.size() == 0) {
+    FML_LOG(ERROR) << "akbiggs: Killing in OnEngineTerminate";
     Kill();
     // WARNING: Don't do anything past this point because the delegate may have
     // collected this instance via the termination callback.
@@ -551,6 +556,7 @@ void ComponentV2::CreateView(
     fidl::InterfaceRequest<fuchsia::sys::ServiceProvider> /*incoming_services*/,
     fidl::InterfaceHandle<
         fuchsia::sys::ServiceProvider> /*outgoing_services*/) {
+  FML_LOG(ERROR) << "akbiggs: CreateView";
   auto view_ref_pair = scenic::ViewRefPair::New();
   CreateViewWithViewRef(std::move(token), std::move(view_ref_pair.control_ref),
                         std::move(view_ref_pair.view_ref));
@@ -560,6 +566,7 @@ void ComponentV2::CreateViewWithViewRef(
     zx::eventpair view_token,
     fuchsia::ui::views::ViewRefControl control_ref,
     fuchsia::ui::views::ViewRef view_ref) {
+  FML_LOG(ERROR) << "akbiggs: CreateViewWithViewRef";
   if (!svc_) {
     FML_DLOG(ERROR)
         << "Component incoming services was invalid when attempting to "
@@ -585,6 +592,8 @@ void ComponentV2::CreateViewWithViewRef(
 }
 
 void ComponentV2::CreateView2(fuchsia::ui::app::CreateView2Args view_args) {
+  FML_LOG(ERROR) << "akbiggs: CreateView2";
+
   if (!svc_) {
     FML_DLOG(ERROR)
         << "Component incoming services was invalid when attempting to "

@@ -221,6 +221,7 @@ void Engine::Initialize(
                                          weak = weak_factory_.GetWeakPtr()]() {
     task_runner->PostTask([weak]() {
       if (weak) {
+        FML_LOG(ERROR) << "akbiggs: session_error_callback";
         weak->Terminate();
       }
     });
@@ -339,6 +340,7 @@ void Engine::Initialize(
        weak = weak_factory_.GetWeakPtr()]() {
         task_runner->PostTask([weak]() {
           if (weak) {
+            FML_LOG(ERROR) << "akbiggs: on_session_listener_error";
             weak->Terminate();
           }
         });
@@ -615,6 +617,7 @@ void Engine::Initialize(
     // The engine could have been killed by the caller right after the
     // constructor was called but before it could run on the UI thread.
     if (weak) {
+      FML_LOG(ERROR) << "akbiggs: on_run_failure";
       weak->Terminate();
     }
   };
@@ -682,12 +685,13 @@ void Engine::OnMainIsolateStart() {
 }
 
 void Engine::OnMainIsolateShutdown() {
-  FML_DLOG(INFO) << "Main isolate for engine '" << thread_label_
+  FML_LOG(ERROR) << "akbiggs: Main isolate for engine '" << thread_label_
                  << "' shutting down.";
   Terminate();
 }
 
 void Engine::Terminate() {
+  FML_LOG(ERROR) << "akbiggs: Terminate";
   delegate_.OnEngineTerminate(this);
   // Warning. Do not do anything after this point as the delegate may have
   // collected this object.
