@@ -31,6 +31,7 @@ std::unique_ptr<SurfaceFrame> GPUSurfaceSoftware::AcquireFrame(
   // TODO(38466): Refactor GPU surface APIs take into account the fact that an
   // external view embedder may want to render to the root surface.
   if (!render_to_surface_) {
+    FML_LOG(ERROR) << "Not rendering to surface";
     return std::make_unique<SurfaceFrame>(
         nullptr, std::move(framebuffer_info),
         [](const SurfaceFrame& surface_frame, SkCanvas* canvas) {
@@ -39,6 +40,7 @@ std::unique_ptr<SurfaceFrame> GPUSurfaceSoftware::AcquireFrame(
   }
 
   if (!IsValid()) {
+    FML_LOG(ERROR) << "Not valid";
     return nullptr;
   }
 
@@ -47,10 +49,12 @@ std::unique_ptr<SurfaceFrame> GPUSurfaceSoftware::AcquireFrame(
   sk_sp<SkSurface> backing_store = delegate_->AcquireBackingStore(size);
 
   if (backing_store == nullptr) {
+    FML_LOG(ERROR) << "No backing store";
     return nullptr;
   }
 
   if (size != SkISize::Make(backing_store->width(), backing_store->height())) {
+    FML_LOG(ERROR) << "Failed to allocate SkISize.";
     return nullptr;
   }
 
@@ -65,6 +69,7 @@ std::unique_ptr<SurfaceFrame> GPUSurfaceSoftware::AcquireFrame(
                                           SkCanvas* canvas) -> bool {
     // If the surface itself went away, there is nothing more to do.
     if (!self || !self->IsValid() || canvas == nullptr) {
+      FML_LOG(ERROR) << "SubmitCallback: Surface went away.";
       return false;
     }
 

@@ -54,6 +54,7 @@ void EmbedderExternalViewEmbedder::BeginFrame(
     GrDirectContext* context,
     double device_pixel_ratio,
     fml::RefPtr<fml::RasterThreadMerger> raster_thread_merger) {
+  FML_LOG(ERROR) << "BeginFrame";
   Reset();
 
   pending_frame_size_ = frame_size;
@@ -138,6 +139,7 @@ static FlutterBackingStoreConfig MakeBackingStoreConfig(
 void EmbedderExternalViewEmbedder::SubmitFrame(
     GrDirectContext* context,
     std::unique_ptr<SurfaceFrame> frame) {
+  FML_LOG(ERROR) << "SubmitFrame";
   auto [matched_render_targets, pending_keys] =
       render_target_cache_.GetExistingTargetsInCache(pending_views_);
 

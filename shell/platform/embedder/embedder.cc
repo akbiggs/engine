@@ -106,7 +106,11 @@ static FlutterEngineResult LogEmbedderError(FlutterEngineResult code,
   snprintf(error, (sizeof(error) / sizeof(char)),
            "%s (%d): '%s' returned '%s'. %s", file_base, line, function,
            code_name, reason);
+#if OS_FUCHSIA
+  FML_LOG(ERROR) << "Embedder error: " << error;
+#else
   std::cerr << error << std::endl;
+#endif
   return code;
 }
 
@@ -133,6 +137,7 @@ static bool IsOpenGLRendererConfigValid(const FlutterRendererConfig* config) {
 
 static bool IsSoftwareRendererConfigValid(const FlutterRendererConfig* config) {
   if (config->type != kSoftware) {
+    FML_LOG(ERROR) << "Not software.";
     return false;
   }
 
@@ -140,6 +145,7 @@ static bool IsSoftwareRendererConfigValid(const FlutterRendererConfig* config) {
 
   if (SAFE_ACCESS(software_config, surface_present_callback, nullptr) ==
       nullptr) {
+    FML_LOG(ERROR) << "No callback.";
     return false;
   }
 
@@ -410,6 +416,17 @@ InferSoftwarePlatformViewCreationCallback(
       software_dispatch_table = {
           software_present_backing_store,  // required
       };
+
+  if (config->software.surface_acquire_callback) {
+    auto software_acquire_surface =
+        [ptr = config->software.surface_acquire_callback, user_data](
+            size_t width, size_t height, uint8_t** buffer_out,
+            size_t* stride_out) -> bool {
+      return ptr(user_data, width, height, buffer_out, stride_out);
+    };
+
+    software_dispatch_table.software_acquire_surface = software_acquire_surface;
+  }
 
   return fml::MakeCopyable(
       [software_dispatch_table, platform_dispatch_table,
@@ -995,6 +1012,12 @@ FlutterEngineResult FlutterEngineInitialize(size_t version,
   settings.leak_vm = !SAFE_ACCESS(args, shutdown_dart_vm_when_done, false);
   settings.old_gen_heap_size = SAFE_ACCESS(args, dart_old_gen_heap_size, -1);
 
+  // TODO(akbiggs): The observatory always fails currently with our embedder.
+  // Figure out how to make it work.
+  settings.enable_observatory = false;
+  // TODO(cbracken): pass this in as a param to allow 0.0.0.0, ::1, etc.
+  // settings.observatory_host = "127.0.0.1";
+
   if (!flutter::DartVM::IsRunningPrecompiledCode()) {
     // Verify the assets path contains Dart 2 kernel assets.
     const std::string kApplicationKernelSnapshotFileName = "kernel_blob.bin";
@@ -1005,7 +1028,18 @@ FlutterEngineResult FlutterEngineInitialize(size_t version,
           kInvalidArguments,
           "Not running in AOT mode but could not resolve the kernel binary.");
     }
+
     settings.application_kernel_asset = kApplicationKernelSnapshotFileName;
+
+    // TODO(akbiggs): Remove this hack.
+    // Without this, creating the Dart VM fails because it doesn't know how to
+    // discover our vm_snapshot_data and isolate_snapshot_data.
+    // See DartVMData::Create and DartSnapshot::VMSnapshotFromSettings.
+    // I'm not sure how JIT builds work on the embedder without these settings.
+    settings.vm_snapshot_data_path =
+        fml::paths::JoinPaths({settings.assets_path, "vm_snapshot_data"});
+    settings.isolate_snapshot_data_path =
+        fml::paths::JoinPaths({settings.assets_path, "isolate_snapshot_data"});
   }
 
   settings.task_observer_add = [](intptr_t key, fml::closure callback) {
@@ -1299,6 +1333,9 @@ FlutterEngineResult FlutterEngineInitialize(size_t version,
     return LOG_EMBEDDER_ERROR(kInternalInconsistency,
                               "Task runner configuration was invalid.");
   }
+
+  FML_LOG(INFO) << "Inferring RunConfiguration from settings: "
+                << settings.ToString();
 
   auto run_configuration =
       flutter::RunConfiguration::InferFromSettings(settings);

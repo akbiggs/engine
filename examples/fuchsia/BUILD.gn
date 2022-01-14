@@ -1,0 +1,69 @@
+# Copyright 2013 The Flutter Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/fuchsia/sdk.gni")
+import("//flutter/tools/fuchsia/fuchsia_archive.gni")
+import("//flutter/tools/fuchsia/fuchsia_libs.gni")
+
+executable("fuchsia") {
+  output_name = "flutter_embedder_fuchsia"
+
+  sources = [ "flutter_embedder_fuchsia.cc" ]
+
+  deps = [
+    "$fuchsia_sdk_root/fidl:fuchsia.ui.app",
+    "$fuchsia_sdk_root/fidl:fuchsia.ui.scenic",
+    "$fuchsia_sdk_root/pkg:async-loop",
+    "$fuchsia_sdk_root/pkg:async-loop-cpp",
+    "$fuchsia_sdk_root/pkg:async-loop-default",
+    "$fuchsia_sdk_root/pkg:scenic_cpp",
+    "$fuchsia_sdk_root/pkg:sys_cpp",
+    "$fuchsia_sdk_root/pkg:sys_inspect_cpp",
+    "$fuchsia_sdk_root/pkg:syslog",
+    "$fuchsia_sdk_root/pkg:trace",
+    "$fuchsia_sdk_root/pkg:trace-provider-so",
+    "//flutter/examples/fuchsia/utils",
+
+    # TODO(akbiggs): Get rid of this dependency.
+    "//flutter/fml",
+
+    # This should be the only dependency from shell/.
+    "//flutter/shell/platform/embedder",
+
+    # For dart::SetDartVmNode.
+    "//third_party/dart/runtime:libdart_jit",
+    "//third_party/dart/runtime/platform:libdart_platform_jit",
+  ]
+}
+
+fuchsia_archive("hello_fuchsia_embedder") {
+  binary = "flutter_embedder_fuchsia"
+  cml_file = "meta/component.cml"
+  libraries = [
+                {
+                  path = "$root_out_dir"
+                  name = "libflutter_engine.so"
+                },
+              ] + common_libs
+  resources =
+      [
+        {
+          path = rebase_path("//flutter/examples/fuchsia/flutter_assets")
+          dest = "flutter_assets"
+        },
+        {
+          path = rebase_path("//third_party/icu/common/icudtl.dat")
+          dest = "icudtl.dat"
+        },
+      ] + vulkan_icds
+  deps = [
+    ":fuchsia",
+    "//flutter/shell/platform/embedder:copy_headers",
+    "//flutter/shell/platform/embedder:flutter_engine_library",
+  ]
+}
+# fuchsia_package("package") {
+#   package_name = "app"
+#   deps = [ ":app_flutter_component" ]
+# }

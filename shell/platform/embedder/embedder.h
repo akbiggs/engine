@@ -306,6 +306,11 @@ typedef bool (*SoftwareSurfacePresentCallback)(void* /* user data */,
                                                const void* /* allocation */,
                                                size_t /* row bytes */,
                                                size_t /* height */);
+typedef bool (*SoftwareSurfaceAcquireCallback)(void* /* user data */,
+                                               size_t /* width */,
+                                               size_t /* height */,
+                                               uint8_t** /* buffer out */,
+                                               size_t* /* stride out */);
 typedef void* (*ProcResolver)(void* /* user data */, const char* /* name */);
 typedef bool (*TextureFrameCallback)(void* /* user data */,
                                      int64_t /* texture identifier */,
@@ -549,6 +554,10 @@ typedef struct {
   /// format. The buffer is owned by the Flutter engine and must be copied in
   /// this callback if needed.
   SoftwareSurfacePresentCallback surface_present_callback;
+
+  // HACK(akbiggs): Add a callback to acquire the surface for Fuchsia in
+  // software rendering.
+  SoftwareSurfaceAcquireCallback surface_acquire_callback;
 } FlutterSoftwareRendererConfig;
 
 typedef struct {

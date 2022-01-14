@@ -289,7 +289,7 @@ if (enable_unittests) {
 }
 
 shared_library("flutter_engine_library") {
-  visibility = [ ":*" ]
+  # visibility = [ ":*" ]
 
   output_name = "flutter_engine"
 
@@ -303,7 +303,7 @@ shared_library("flutter_engine_library") {
 }
 
 copy("copy_headers") {
-  visibility = [ ":*" ]
+  # visibility = [ ":*" ]
   sources = [ "embedder.h" ]
   outputs = [ "$root_out_dir/flutter_embedder.h" ]
 }

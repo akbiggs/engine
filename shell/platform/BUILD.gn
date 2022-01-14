@@ -21,7 +21,8 @@ group("platform") {
       deps += [ "windows" ]
     }
   } else if (is_fuchsia) {
-    deps = [ "fuchsia" ]
+    # Turn off the runner in the embedder prototype.
+    # deps = [ "fuchsia" ]
   } else {
     assert(false, "Unknown/Unsupported platform.")
   }

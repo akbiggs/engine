@@ -137,6 +137,7 @@ std::unique_ptr<Shell> Shell::Create(
   // Always use the `vm_snapshot` and `isolate_snapshot` provided by the
   // settings to launch the VM.  If the VM is already running, the snapshot
   // arguments are ignored.
+  FML_LOG(INFO) << "Creating snapshot with settings: " << settings.ToString();
   auto vm_snapshot = DartSnapshot::VMSnapshotFromSettings(settings);
   auto isolate_snapshot = DartSnapshot::IsolateSnapshotFromSettings(settings);
   auto vm = DartVMRef::Create(settings, vm_snapshot, isolate_snapshot);

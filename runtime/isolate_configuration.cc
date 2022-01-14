@@ -227,10 +227,15 @@ std::unique_ptr<IsolateConfiguration> IsolateConfiguration::InferFromSettings(
 
   // Running from kernel snapshot. Requires asset manager.
   {
+    FML_DLOG(INFO) << "Running from kernel snapshot "
+                   << settings.application_kernel_asset;
     std::unique_ptr<fml::Mapping> kernel =
         asset_manager->GetAsMapping(settings.application_kernel_asset);
     if (kernel) {
+      FML_DLOG(INFO) << "Creating for kernel";
       return CreateForKernel(std::move(kernel));
+    } else {
+      FML_DLOG(INFO) << "Not creating for kernel";
     }
   }
 

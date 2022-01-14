@@ -27,7 +27,8 @@ class MessageLoopImpl;
 /// \see fml::Wakeable
 class MessageLoop {
  public:
-  FML_EMBEDDER_ONLY
+  // TODO(akbiggs): Stop using MessageLoop to make a basic event loop.
+  // FML_EMBEDDER_ONLY
   static MessageLoop& GetCurrent();
 
   void Run();

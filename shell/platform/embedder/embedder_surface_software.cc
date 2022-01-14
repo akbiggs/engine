@@ -29,13 +29,17 @@ bool EmbedderSurfaceSoftware::IsValid() const {
 
 // |EmbedderSurface|
 std::unique_ptr<Surface> EmbedderSurfaceSoftware::CreateGPUSurface() {
+  FML_LOG(INFO) << "CreateGPUSurface";
   if (!IsValid()) {
+    FML_LOG(ERROR) << "CreateGPUSurface: Not valid";
     return nullptr;
   }
   const bool render_to_surface = !external_view_embedder_;
   auto surface = std::make_unique<GPUSurfaceSoftware>(this, render_to_surface);
 
   if (!surface->IsValid()) {
+    FML_LOG(ERROR)
+        << "CreateGPUSurface: Created surface, but surface not valid.";
     return nullptr;
   }
 
@@ -63,9 +67,25 @@ sk_sp<SkSurface> EmbedderSurfaceSoftware::AcquireBackingStore(
     return sk_surface_;
   }
 
-  SkImageInfo info = SkImageInfo::MakeN32(
-      size.fWidth, size.fHeight, kPremul_SkAlphaType, SkColorSpace::MakeSRGB());
-  sk_surface_ = SkSurface::MakeRaster(info, nullptr);
+  if (software_dispatch_table_.software_acquire_surface) {
+    uint8_t* allocation;
+    size_t stride;
+    bool acquired_surface = software_dispatch_table_.software_acquire_surface(
+        size.fWidth, size.fHeight, &allocation, &stride);
+    if (acquired_surface) {
+      SkSurfaceProps sk_surface_props(0, kUnknown_SkPixelGeometry);
+      const SkImageInfo info =
+          SkImageInfo::Make(size, kRGBA_8888_SkColorType, kPremul_SkAlphaType,
+                            SkColorSpace::MakeSRGB());
+      sk_surface_ = SkSurface::MakeRasterDirect(info, allocation, stride,
+                                                &sk_surface_props);
+    }
+  } else {
+    SkImageInfo info =
+        SkImageInfo::MakeN32(size.fWidth, size.fHeight, kPremul_SkAlphaType,
+                             SkColorSpace::MakeSRGB());
+    sk_surface_ = SkSurface::MakeRaster(info, nullptr);
+  }
 
   if (sk_surface_ == nullptr) {
     FML_LOG(ERROR) << "Could not create backing store for software rendering.";
@@ -78,6 +98,7 @@ sk_sp<SkSurface> EmbedderSurfaceSoftware::AcquireBackingStore(
 // |GPUSurfaceSoftwareDelegate|
 bool EmbedderSurfaceSoftware::PresentBackingStore(
     sk_sp<SkSurface> backing_store) {
+  // FML_LOG(ERROR) << "PresentBackingStore";
   if (!IsValid()) {
     FML_LOG(ERROR) << "Tried to present an invalid software surface.";
     return false;

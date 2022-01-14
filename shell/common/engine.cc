@@ -479,12 +479,17 @@ void Engine::ScheduleFrame(bool regenerate_layer_tree) {
 
 void Engine::Render(std::unique_ptr<flutter::LayerTree> layer_tree) {
   if (!layer_tree) {
+    FML_LOG(ERROR) << "Engine::Render fails from no layer tree";
     return;
   }
 
   // Ensure frame dimensions are sane.
   if (layer_tree->frame_size().isEmpty() ||
       layer_tree->device_pixel_ratio() <= 0.0f) {
+    FML_LOG(ERROR)
+        << "Engine::Render frame dimensions are insane. frame_size().Empty()="
+        << layer_tree->frame_size().isEmpty()
+        << " device_pixel_ratio()=" << layer_tree->device_pixel_ratio();
     return;
   }
 

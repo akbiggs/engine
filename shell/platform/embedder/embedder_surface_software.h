@@ -18,6 +18,9 @@ class EmbedderSurfaceSoftware final : public EmbedderSurface,
   struct SoftwareDispatchTable {
     std::function<bool(const void* allocation, size_t row_bytes, size_t height)>
         software_present_backing_store;  // required
+    std::function<
+        bool(size_t width, size_t height, uint8_t** allocation, size_t* stride)>
+        software_acquire_surface;  // optional
   };
 
   EmbedderSurfaceSoftware(

@@ -85,6 +85,11 @@ group("flutter") {
     public_deps += [ "//flutter/examples/glfw" ]
   }
 
+  # Compile the Fuchsia embedder.
+  if (is_fuchsia) {
+    public_deps += [ "//flutter/examples/fuchsia:hello_fuchsia_embedder" ]
+  }
+
   # If enbaled, compile the SDK / snapshot.
   if (!is_fuchsia) {
     public_deps += [ "//flutter/lib/snapshot:generate_snapshot_bins" ]
@@ -169,7 +174,8 @@ group("flutter") {
     }
 
     if (is_fuchsia) {
-      public_deps += [ "//flutter/shell/platform/fuchsia:tests" ]
+      # Turn off more runner-related tests.
+      # public_deps += [ "//flutter/shell/platform/fuchsia:tests" ]
     }
 
     if (is_mac) {

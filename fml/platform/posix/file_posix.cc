@@ -5,6 +5,7 @@
 #include "flutter/fml/file.h"
 
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -108,6 +109,8 @@ fml::UniqueFD OpenDirectory(const fml::UniqueFD& base_directory,
     return {};
   }
 
+  FML_LOG(INFO) << "OpenDirectory: " << base_directory.get() << "/" << path;
+
   if (create_if_necessary && !FileExists(base_directory, path)) {
     if (::mkdirat(base_directory.get(), path,
                   ToPosixCreateModeFlags(permission) | S_IXUSR) != 0) {
@@ -128,6 +131,8 @@ bool IsDirectory(const fml::UniqueFD& directory) {
     return false;
   }
 
+  FML_LOG(INFO) << "IsDirectory? " << directory.get();
+
   struct stat stat_result = {};
 
   if (::fstat(directory.get(), &stat_result) != 0) {
@@ -138,17 +143,24 @@ bool IsDirectory(const fml::UniqueFD& directory) {
 }
 
 bool IsDirectory(const fml::UniqueFD& base_directory, const char* path) {
+  FML_LOG(INFO) << "IsDirectory? " << base_directory.get() << "/" << path;
   UniqueFD file = OpenFileReadOnly(base_directory, path);
   return (file.is_valid() && IsDirectory(file));
 }
 
 bool IsFile(const std::string& path) {
+  FML_LOG(INFO) << "IsFile? " << path;
+
   struct stat buf;
-  if (stat(path.c_str(), &buf) != 0) {
+  auto stat_result = stat(path.c_str(), &buf);
+  if (stat_result != 0) {
+    FML_LOG(ERROR) << "Failed to stat (" << stat_result << " errno " << errno
+                   << "), returning false";
     return false;
   }
 
-  return S_ISREG(buf.st_mode);
+  bool result = S_ISREG(buf.st_mode);
+  return result;
 }
 
 bool TruncateFile(const fml::UniqueFD& file, size_t size) {
