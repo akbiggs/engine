@@ -652,6 +652,12 @@ bool PlatformView::HandleFlutterTextInputChannelPlatformMessage(
     current_text_input_client_ = 0;
     last_text_state_ = nullptr;
     DeactivateIme();
+  } else if (method->value == "TextInput.setCaretRect") {
+    // We don't have setCaretRect implemented and it gets
+    // sent a lot during text input, so we create a case for it
+    // here to avoid "Unknown flutter/textinput method setCaretRect"
+    // log spam.
+    // TODO(fxb/101619): Should we implement this?
   } else {
     FML_DLOG(ERROR) << "Unknown " << message->channel() << " method "
                     << method->value.GetString();
