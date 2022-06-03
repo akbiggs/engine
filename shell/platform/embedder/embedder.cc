@@ -517,6 +517,18 @@ InferSoftwarePlatformViewCreationCallback(
           software_present_backing_store,  // required
       };
 
+  if (config->software.surface_acquire_callback) {
+    auto software_acquire_backing_store =
+        [ptr = config->software.surface_acquire_callback, user_data](
+            size_t width, size_t height, uint8_t** buffer_out,
+            size_t* stride_out) -> bool {
+      return ptr(user_data, width, height, buffer_out, stride_out);
+    };
+
+    software_dispatch_table.software_acquire_backing_store =
+        software_acquire_backing_store;
+  }
+
   return fml::MakeCopyable(
       [software_dispatch_table, platform_dispatch_table,
        external_view_embedder =

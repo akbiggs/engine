@@ -65,9 +65,27 @@ sk_sp<SkSurface> EmbedderSurfaceSoftware::AcquireBackingStore(
     return sk_surface_;
   }
 
-  SkImageInfo info = SkImageInfo::MakeN32(
-      size.fWidth, size.fHeight, kPremul_SkAlphaType, SkColorSpace::MakeSRGB());
-  sk_surface_ = SkSurface::MakeRaster(info, nullptr);
+  sk_surface_ = nullptr;
+  if (software_dispatch_table_.software_acquire_backing_store) {
+    uint8_t* allocation;
+    size_t stride;
+    bool acquired_surface =
+        software_dispatch_table_.software_acquire_backing_store(
+            size.fWidth, size.fHeight, &allocation, &stride);
+    if (acquired_surface) {
+      SkSurfaceProps sk_surface_props(0, kUnknown_SkPixelGeometry);
+      const SkImageInfo info =
+          SkImageInfo::Make(size, kRGBA_8888_SkColorType, kPremul_SkAlphaType,
+                            SkColorSpace::MakeSRGB());
+      sk_surface_ = SkSurface::MakeRasterDirect(info, allocation, stride,
+                                                &sk_surface_props);
+    }
+  } else {
+    SkImageInfo info =
+        SkImageInfo::MakeN32(size.fWidth, size.fHeight, kPremul_SkAlphaType,
+                             SkColorSpace::MakeSRGB());
+    sk_surface_ = SkSurface::MakeRaster(info, nullptr);
+  }
 
   if (sk_surface_ == nullptr) {
     FML_LOG(ERROR) << "Could not create backing store for software rendering.";
